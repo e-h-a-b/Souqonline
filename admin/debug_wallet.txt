@@ -1,0 +1,126 @@
+2025-11-07 03:49:48
+Action: deduct_balance
+Customer ID: 6
+Amount: 100
+Description: 9000
+====================
+
+2025-11-07 03:52:32
+Action: deduct_balance
+Customer ID: 6
+Amount: 30000
+Description: 9000
+====================
+
+2025-11-07 04:00:00
+Action: deduct_balance
+Customer ID: 6
+Amount: 60000
+Description: 9000
+====================
+
+2025-11-07 04:00:42
+Action: deduct_balance
+Customer ID: 6
+Amount: 10000
+Description: 10000
+====================
+
+2025-11-07 04:00:59
+Action: deduct_balance
+Customer ID: 6
+Amount: 100
+Description: 9000
+====================
+
+2025-11-07 04:02:16
+Action: deduct_balance
+Customer ID: 6
+Amount: 130000
+Description: 9000
+====================
+
+2025-11-07 04:04:15
+Action: deduct_balance
+Customer ID: 6
+Amount: 20600
+Description: 9000
+====================
+
+2025-11-07 04:04:43
+Action: deduct_balance
+Customer ID: 6
+Amount: 250000
+Description: 0
+====================
+
+2025-11-07 04:06:57
+Action: deduct_balance
+Customer ID: 6
+Amount: 533000
+Description: 9000
+====================
+
+2025-11-07 04:07:25
+Action: deduct_balance
+Customer ID: 6
+Amount: 1000000
+Description: 0
+====================
+
+2025-11-07 04:13:48
+Action: deduct_balance
+Customer ID: 6
+Amount: 2000000
+Description: 9000
+====================
+
+2025-11-07 04:15:26
+Action: add_balance
+Customer ID: 6
+Amount: 100
+Description: 9000
+====================
+
+2025-11-07 04:42:37
+Action: deduct_balance
+Customer ID: 6
+Amount: 100
+Description: 9000
+====================
+
+2025-11-07 04:47:53
+Action: NOT SET
+Customer ID: NOT SET
+Amount: NOT SET
+Description: NOT SET
+====================
+
+2025-11-07 04:48:15
+Action: NOT SET
+Customer ID: NOT SET
+Amount: NOT SET
+Description: NOT SET
+====================
+
+2025-11-07 04:56:17
+Action: NOT SET
+Customer ID: NOT SET
+Amount: NOT SET
+Description: NOT SET
+====================
+
+2025-11-07 04:56:34
+Action: NOT SET
+Customer ID: NOT SET
+Amount: NOT SET
+Description: NOT SET
+====================
+
+2025-11-07 16:29:51
+Action: NOT SET
+Customer ID: NOT SET
+Amount: NOT SET
+Description: NOT SET
+====================
+
