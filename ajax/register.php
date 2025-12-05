@@ -20,7 +20,7 @@ if ($product_id > 0) {
     header("Location: product.php?id=$product_id");
 } else {
     // التوجيه للصفحة الرئيسية
-    header("Location: index.php");
+    header("Location: ../index.php");
 }
 exit;
 ?>

@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+require_once '../functions.php';
 require_once '../daily_points.php';
 
 header('Content-Type: application/json');
