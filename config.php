@@ -34,7 +34,7 @@ define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
 
 // إعدادات التطبيق
-define('SITE_URL', 'http://localhost/dashboard/trading/Version4');
+define('SITE_URL', 'http://localhost/v1.0');
 define('ADMIN_URL', SITE_URL . '/admin');
 define('UPLOAD_PATH', __DIR__ . '/uploads/');
 define('UPLOAD_URL', SITE_URL . '/uploads/');

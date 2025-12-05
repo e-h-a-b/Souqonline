@@ -1,4 +1,33 @@
 <?php
+// في أعلى cart.php بعد require_once 'functions.php'
+require_once 'smart_command_processor.php';
+
+// معالجة الأوامر الذكية إذا كانت موجودة
+if (isset($_POST['smart_command']) && !empty($_POST['smart_command'])) {
+    $commandText = cleanInput($_POST['smart_command']);
+    
+    // إنشاء معالج الأوامر
+    $customerId = $_SESSION['customer_id'] ?? 0;
+    $processor = new SmartCommandProcessor($pdo, $customerId);
+    
+    // معالجة الأمر
+    $result = $processor->processCommand($commandText);
+    
+    // تخزين النتيجة للعرض
+    $_SESSION['smart_command_result'] = $result;
+    
+    // إعادة التوجيه لتجنب إعادة الإرسال
+    header('Location: cart.php');
+    exit;
+}
+
+// عرض نتيجة الأمر إذا كانت موجودة
+if (isset($_SESSION['smart_command_result'])) {
+    echo '<div class="alert alert-info">' . $_SESSION['smart_command_result'] . '</div>';
+    unset($_SESSION['smart_command_result']);
+}
+?>
+<?php
 /**
  * صفحة سلة المشتريات
  */

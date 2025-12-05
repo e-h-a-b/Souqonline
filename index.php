@@ -81,12 +81,15 @@ autoApplyBlackFridayDiscounts();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= htmlspecialchars($storeDescription) ?>">
+ 
+<meta name="keywords" content="<?= htmlspecialchars(getSetting('meta_keywords', 'متجر, تسوق, شراء, عروض')) ?>">
+   
     <title><?= htmlspecialchars($storeName) ?> - الصفحة الرئيسية</title>
     <link rel="stylesheet" href="assets/css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 	<!-- مكتبة jsQR للمسح الضوئي -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-
+ 
 <!-- مكتبة توليد QR Code -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <script src="assets/js/app.js" defer></script>
@@ -96,7 +99,18 @@ autoApplyBlackFridayDiscounts();
         isLoggedIn: <?= isset($_SESSION['customer_id']) ? 'true' : 'false' ?>,
         customerId: <?= isset($_SESSION['customer_id']) ? $_SESSION['customer_id'] : '0' ?>
     };
+	// إنشاء روابط صديقة للسيو
+function generateSeoUrl($title, $id) {
+    $slug = preg_replace('/[^\p{Arabic}\p{L}\p{N}\s]/u', '', $title);
+    $slug = preg_replace('/\s+/', '-', $slug);
+    $slug = trim($slug, '-');
+  //  return $slug . '-' . $id;
+}
 	</script>
+	<!-- إضافة rel="canonical" --> 
+
+<!-- إضافة breadcrumbs -->
+ 
 <STYLE>
 /* أنماط نظام الكاشباك */
 .cashback-badge {
@@ -2858,6 +2872,7 @@ document.addEventListener('input', function(event) {
 </script>
 </head>
 <body>
+
 <!-- Header -->
 <header class="site-header">
 
@@ -2865,7 +2880,7 @@ document.addEventListener('input', function(event) {
         <div class="header-content">
             <div class="logo">
                 <a href="index.php">
-                    <h1><?= htmlspecialchars($storeName) ?></h1>
+                    <h1><?= htmlspecialchars(getSetting('seo_h1', $storeName)) ?></h1>
                 </a>
             </div>
             
@@ -2968,7 +2983,9 @@ document.addEventListener('input', function(event) {
         </div>
     </div>
 <?php endif; ?>
-
+                <a href="market-survey.php"   class="wishlist-btn"  style="display: flex; align-items: center; gap: 5px; text-decoration: none; color: #374151; padding: 8px 12px; border-radius: 20px; background: #f3f4f6; transition: all 0.3s;">
+                 <i class='fas fa-th-list' style='font-size:24px'></i>
+                </a>
                 <!-- المفضلة -->
                 <a href="wishlist.php" class="wishlist-btn" style="display: flex; align-items: center; gap: 5px; text-decoration: none; color: #374151; padding: 8px 12px; border-radius: 20px; background: #f3f4f6; transition: all 0.3s;">
                     <i class="fas fa-heart" style="color: #ef4444;"></i>
@@ -3007,6 +3024,10 @@ document.addEventListener('input', function(event) {
                 <?php endforeach; ?>
                 <li><a href="about.php">من نحن</a></li>
                 <li><a href="contact.php">اتصل بنا</a></li>
+								<!-- أضف هذا الزر في بداية قسم المحتوى الرئيسي -->
+<button class="sidebar-toggle" id="sidebarToggle" title="إظهار/إخفاء الشريط الجانبي">
+    <i class="fas fa-bars"></i>
+</button>
             </ul>
         </nav>
     </div>
@@ -3029,797 +3050,10 @@ unset($_SESSION['daily_points_message']);
 endif; ?>
 
 
+<?php require 'Product-items.php' ?>
 
-    <!-- Main Content -->
-<!-- Main Content -->
-<main class="main-content" id="products">
- 
-<!-- بانر الجمعة البيضاء -->
-<?php if (isBlackFridayPeriod()): ?>
-<!-- عداد التنازل للجمعة البيضاء --> 
-    <?php $remainingTime = getRemainingBlackFridayTime(); ?>
-    <div class="black-friday-countdown">
-        <div class="countdown-title">
-            🎉 عروض الجمعة البيضاء تنتهي خلال:
-        </div>
-    <div class="black-friday-banner">
-        <div class="banner-content">
-            <div class="banner-title">
-                🎉 الجمعة البيضاء 🎉
-                <span style="color: gold;">خصومات تصل إلى <?= getBlackFridaySettings()['discount_percentage'] ?>%</span>
-            </div>
-            <div class="banner-subtitle">
-                🚀 عروض محدودة! استفد من أفضل العروض قبل انتهاء الوقت
-                <?php $remainingTime = getRemainingBlackFridayTime(); ?>
-                <?php if ($remainingTime): ?>
-                    - ⏳ متبقي: <?= $remainingTime['days'] ?> يوم و <?= $remainingTime['hours'] ?> ساعة
-                <?php endif; ?>
-            </div>
-        </div>
-    </div> 
-        <div class="countdown-timer1" id="black-friday-countdown">
-            <?php if ($remainingTime): ?>
-                <div class="countdown-unit">
-                    <span id="countdown-days"><?= $remainingTime['days'] ?></span>
-                    <div class="countdown-label">أيام</div>
-                </div>
-                <div class="countdown-unit">
-                    <span id="countdown-hours"><?= $remainingTime['hours'] ?></span>
-                    <div class="countdown-label">ساعات</div>
-                </div>
-                <div class="countdown-unit">
-                    <span id="countdown-minutes"><?= $remainingTime['minutes'] ?></span>
-                    <div class="countdown-label">دقائق</div>
-                </div>
-                <div class="countdown-unit">
-                    <span id="countdown-seconds"><?= $remainingTime['seconds'] ?></span>
-                    <div class="countdown-label">ثواني</div>
-                </div>
-            <?php else: ?>
-                <div>انتهت العروض</div>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <script>
-    // تحديث العداد كل ثانية
-    function updateBlackFridayCountdown() {
-        const daysElem = document.getElementById('countdown-days');
-        const hoursElem = document.getElementById('countdown-hours');
-        const minutesElem = document.getElementById('countdown-minutes');
-        const secondsElem = document.getElementById('countdown-seconds');
-        
-        if (!daysElem) return;
-        
-        let days = parseInt(daysElem.textContent);
-        let hours = parseInt(hoursElem.textContent);
-        let minutes = parseInt(minutesElem.textContent);
-        let seconds = parseInt(secondsElem.textContent);
-        
-        seconds--;
-        
-        if (seconds < 0) {
-            seconds = 59;
-            minutes--;
-            
-            if (minutes < 0) {
-                minutes = 59;
-                hours--;
-                
-                if (hours < 0) {
-                    hours = 23;
-                    days--;
-                    
-                    if (days < 0) {
-                        // انتهى الوقت
-                        document.querySelector('.black-friday-countdown').innerHTML = 
-                            '<div class="countdown-title">انتهت عروض الجمعة البيضاء</div>';
-                        return;
-                    }
-                }
-            }
-        }
-        
-        daysElem.textContent = days;
-        hoursElem.textContent = hours.toString().padStart(2, '0');
-        minutesElem.textContent = minutes.toString().padStart(2, '0');
-        secondsElem.textContent = seconds.toString().padStart(2, '0');
-        
-        setTimeout(updateBlackFridayCountdown, 1000);
-    }
-    
-    // بدء العداد
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(updateBlackFridayCountdown, 1000);
-    });
-    </script>
-<?php endif; ?>
-    <div class="container">
-        <div class="content-wrapper">
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <!-- Categories -->
-                <div class="widget">
-                    <h3 class="widget-title">الفئات</h3>
-                    <ul class="category-list">
-                        <li>
-                            <a href="index.php" class="<?= !$categoryId ? 'active' : '' ?>">
-                                جميع المنتجات
-                            </a>
-                        </li>
-                        <?php foreach ($categories as $cat): ?>
-                            <li>
-                                <a href="index.php?category=<?= $cat['id'] ?>" 
-                                   class="<?= $categoryId == $cat['id'] ? 'active' : '' ?>">
-                                    <?= htmlspecialchars($cat['name']) ?>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-
-                <!-- Top Viewed -->
-                <?php if (!empty($topViewed)): ?>
-                <div class="widget">
-                    <h3 class="widget-title">الأكثر مشاهدة</h3>
-                    <ul class="product-list-mini">
-                        <?php foreach ($topViewed as $product): ?>
-                            <li>
-                                <a href="product.php?id=<?= $product['id'] ?>" class="mini-product">
-                                    <img src="<?= htmlspecialchars($product['main_image'] ?: 'assets/images/placeholder.jpg') ?>" 
-                                         alt="<?= htmlspecialchars($product['title']) ?>">
-                                    <div class="mini-info">
-                                        <h4><?= htmlspecialchars($product['title']) ?></h4>
-                                        <span class="price"><?= formatPrice($product['final_price']) ?></span>
-                                    </div>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <?php endif; ?>
-
-                <!-- Top Ordered -->
-                <?php if (!empty($topOrdered)): ?>
-                <div class="widget">
-                    <h3 class="widget-title">الأكثر طلباً</h3>
-                    <ul class="product-list-mini">
-                        <?php foreach ($topOrdered as $product): ?>
-                            <li>
-                                <a href="product.php?id=<?= $product['id'] ?>" class="mini-product">
-                                    <img src="<?= htmlspecialchars($product['main_image'] ?: 'assets/images/placeholder.jpg') ?>" 
-                                         alt="<?= htmlspecialchars($product['title']) ?>">
-                                    <div class="mini-info">
-                                        <h4><?= htmlspecialchars($product['title']) ?></h4>
-                                        <span class="price"><?= formatPrice($product['final_price']) ?></span>
-                                    </div>
-                                </a>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </div>
-                <?php endif; ?>
-            </aside>
-
-            <!-- Products Section -->
-            <section class="products-section">
-                <div class="section-toolbar">
-                    <div class="toolbar-left">
-                        <h2>
-                            <?php if ($search): ?>
-                                نتائج البحث عن: "<?= htmlspecialchars($search) ?>"
-                            <?php elseif ($categoryId): ?>
-                                <?php 
-                                $currentCat = array_filter($categories, fn($c) => $c['id'] == $categoryId);
-                                echo htmlspecialchars(reset($currentCat)['name'] ?? 'المنتجات');
-                                ?>
-                            <?php else: ?>
-                                جميع المنتجات
-                            <?php endif; ?>
-                        </h2>
-                        <span class="results-count">(<?= count($products) ?> منتج)</span>
-                    </div>
-                    
-                    <div class="toolbar-right">
-                        <label for="sort">ترتيب حسب:</label>
-                        <select id="sort" name="sort" onchange="window.location.href = updateQueryString('sort', this.value)">
-                            <option value="newest" <?= $sort === 'newest' ? 'selected' : '' ?>>الأحدث</option>
-                            <option value="price_low" <?= $sort === 'price_low' ? 'selected' : '' ?>>السعر: من الأقل للأعلى</option>
-                            <option value="price_high" <?= $sort === 'price_high' ? 'selected' : '' ?>>السعر: من الأعلى للأقل</option>
-                            <option value="popular" <?= $sort === 'popular' ? 'selected' : '' ?>>الأكثر شعبية</option>
-                            <option value="rating" <?= $sort === 'rating' ? 'selected' : '' ?>>الأعلى تقييماً</option>
-                        </select>
-                    </div>
-                </div>
-
-                <?php if (empty($products)): ?>
-                    <div class="no-products">
-                        <i class="fas fa-box-open"></i>
-                        <p>لا توجد منتجات متاحة حالياً</p>
-                    </div>
-                <?php else: ?>
-                    <?php
-                    // دالة جديدة لجلب منتج واحد عشوائي من كل متجر مستخدم
-                    function getSingleProductPerCustomerStore($products) {
-                        $customerStores = [];
-                        $filteredProducts = [];
-                        
-                        foreach ($products as $product) {
-                            if ($product['store_type'] === 'customer' && !empty($product['created_by'])) {
-                                $storeOwnerId = $product['created_by'];
-                                
-                                // إذا كان هذا المتجر لم يظهر بعد، نأخذ منتج عشوائي منه
-                                if (!isset($customerStores[$storeOwnerId])) {
-                                    $customerStores[$storeOwnerId] = $product;
-                                    $filteredProducts[] = $product;
-                                }
-                            } else {
-                                // المنتجات الرئيسية نعرضها كلها
-                                $filteredProducts[] = $product;
-                            }
-                        }
-                        
-                        return $filteredProducts;
-                    }
-
-                    // تصفية المنتجات لعرض منتج واحد فقط من كل متجر مستخدم
-                    $filteredProducts = getSingleProductPerCustomerStore($products);
-                    ?>
-                    
-                    <?php if (empty($filteredProducts)): ?>
-                        <div class="no-products">
-                            <i class="fas fa-box-open"></i>
-                            <p>لا توجد منتجات متاحة حالياً</p>
-                        </div>
-                    <?php else: ?>
-                        <div class="products-grid">
-                            <?php foreach ($filteredProducts as $product): ?>
-                                <div class="product-card <?= $product['store_type'] === 'customer' ? 'customer-store-product' : '' ?>" 
-                                     style="<?= $product['store_type'] === 'customer' ? 'border: 3px solid #8b5cf6; background: linear-gradient(135deg, #faf5ff, #f3e8ff);' : '' ?>">
-                                    <?php 
-                                    $customer_id = $_SESSION['customer_id'] ?? 0;
-                                    $isInWishlist = isInWishlist($customer_id, $product['id']);
-                                    
-                                    // الحصول على العد التنازلي النشط
-                                    $countdown = getActiveCountdown($product['id']);
-                                    
-                                    // التحقق من المزايدة النشطة
-                                    $isAuctionActive = isAuctionActive($product);
-                                    
-                                    // التحقق من عرض اشتري 2 واحصل على 1
-                                    $hasBuy2Get1 = hasBuyTwoGetOneOffer($product['id']);
-                                    
-                                    // التحقق إذا كان المنتج من متجر مستخدم
-                                    $isCustomerStore = $product['store_type'] === 'customer';
-                                    $storeOwnerName = '';
-                                    $storeOwnerId = null;
-                                    $additionalProductsCount = 0;
-                                    
-                                    if ($isCustomerStore && !empty($product['created_by'])) {
-                                        $storeOwnerName = getCustomerName($product['created_by']);
-                                        $storeOwnerId = $product['created_by'];
-                                        
-                                        // جلب عدد المنتجات الإضافية لهذا المتجر
-                                        $additionalProductsCount = getCustomerStoreProductsCount($storeOwnerId) - 1;
-                                    }
-                                    ?>
-									  <!-- أيقونة الكاشباك -->
-    <?php if ($product['has_cashback']): ?>
-    <div class="cashback-badge" 
-         onclick="openCashbackModal(<?= $product['id'] ?>, '<?= addslashes($product['title']) ?>', <?= $product['cashback']['amount'] ?>, <?= $product['cashback']['percentage'] ?>, '<?= $product['cashback']['formatted_amount'] ?>')"
-         title="احصل على كاشباك عند الشراء">
-        💰 <?= $product['cashback']['percentage'] ?>%
-    </div>
-    <?php endif; ?>
-	<!-- أيقونة QR Code للتخفيض -->
-<?php if (isset($_SESSION['customer_id']) && $product['store_type'] === 'customer'): ?>
-<button class="qr-discount-btn" 
-        onclick="openQRModal(<?= $product['id'] ?>, <?= $product['created_by'] ?>, '<?= addslashes($product['title']) ?>')"
-        title="احصل على كود QR للتخفيض عند زيارة المتجر">
-    <i class="fas fa-qrcode"></i>
-</button>
-<?php endif; ?>
-
-									    <?php if (isset($product['is_black_friday']) && $product['is_black_friday']): ?>
-        <div class="black-friday-badge">
-            <i class="fas fa-bolt"></i>
-            الجمعة البيضاء
-        </div>
-    <?php endif; ?>
-									<style>
-									/* أيقونة الإحالات */
-.referral-btn {
-    position: absolute;
-    top: 200px;
-    right: 10px;
-    background: rgba(59, 130, 246, 0.9);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.2rem;
-    transition: all 0.3s ease;
-    z-index: 10;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-.referral-btn:hover {
-    background: #3b82f6;
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-}
-
-/* نافذة الإحالات */
-.referral-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    box-sizing: border-box;
-    animation: fadeIn 0.3s ease;
-}
-
-.referral-content {
-	overflow: auto;
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    border-radius: 20px;
-    width: 100%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow: hidden;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.referral-header {
-    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-    color: white;
-    padding: 2rem;
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-}
-
-.referral-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
-    background-size: cover;
-}
-
-.referral-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    position: relative;
-    z-index: 1;
-}
-
-.referral-body {
-    padding: 2rem;
-    text-align: center;
-}
-
-.referral-icon {
-    font-size: 4rem;
-    color: #3b82f6;
-    margin-bottom: 1rem;
-}
-
-.referral-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 1rem;
-}
-
-.referral-description {
-    color: #64748b;
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-}
-
-.referral-link-container {
-    background: #f8fafc;
-    border: 2px dashed #cbd5e1;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    position: relative;
-}
-
-.referral-link {
-    font-size: 0.9rem;
-    color: #475569;
-    word-break: break-all;
-    padding: 0.75rem;
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    margin-bottom: 1rem;
-}
-
-.referral-benefits {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.benefit-item {
-    background: white;
-    padding: 1rem;
-    border-radius: 10px;
-    border: 1px solid #e2e8f0;
-    text-align: center;
-}
-
-.benefit-icon {
-    font-size: 1.5rem;
-    color: #10b981;
-    margin-bottom: 0.5rem;
-}
-
-.benefit-text {
-    font-size: 0.85rem;
-    color: #475569;
-    font-weight: 500;
-}
-
-.referral-actions {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-}
-
-.btn-copy-link {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-copy-link:hover {
-    background: #2563eb;
-    transform: translateY(-2px);
-}
-
-.btn-share-whatsapp {
-    background: #10b981;
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.btn-share-whatsapp:hover {
-    background: #059669;
-    transform: translateY(-2px);
-}
-
-/* تصميم متجاوب */
-@media (max-width: 768px) {
-    .referral-benefits {
-        grid-template-columns: 1fr;
-    }
-    
-    .referral-actions {
-        flex-direction: column;
-    }
-    
-    .referral-btn {
-        top: 200px;
-        right: 10px;
-        width: 35px;
-        height: 35px;
-        font-size: 1rem;
-    }
-}
-									</style>
-                                    <!-- أيقونة الإحالات -->
-<?php if (isset($_SESSION['customer_id']) && getSetting('referral_system_enabled', '1') == '1'): ?>
-<button class="referral-btn" 
-        onclick="openReferralModal(<?= $product['id'] ?>, '<?= addslashes($product['title']) ?>')"
-        title="انشر المنتج واكسب نقاط">
-    <i class="fas fa-share-alt"></i>
-</button>
-<?php endif; ?>
-                                    <!-- شارة متجر المستخدم -->
-                                    <?php if ($isCustomerStore): ?>
-                                        <div class="customer-store-badge" style="
-                                            position: absolute;
-                                            top: 40%;
-                                            left: 10px;
-                                            background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-                                            color: white;
-                                            padding: 0.5rem 0.75rem;
-                                            border-radius: 20px;
-                                            font-weight: 600;
-                                            font-size: 0.75rem;
-                                            z-index: 10;
-                                            box-shadow: 0 2px 4px rgba(139, 92, 246, 0.3);
-                                        ">
-                                            <i class="fas fa-store"></i> متجر شخصي
-                                        </div>
-<!-- في قسم عرض المنتجات -->
-<!-- في قسم عرض المنتجات -->
-<?= displaySmartOffersBadges($product) ?>
-<?php if ($isCustomerStore && isSmartGuidanceEnabled($product['created_by'])): ?>
-    <?php
-    $smartOffers = getActiveSmartOffers($product['id']);
-    if (!empty($smartOffers)):
-    ?>
-        <div class="smart-offers-badges">
-            <?php foreach ($smartOffers as $offer): ?>
-                <span class="smart-offer-badge offer-<?= $offer['type'] ?>">
-                    <?= getOfferTypeLabel($offer['type']) ?>
-                </span>
-            <?php endforeach; ?>
-        </div>
-    <?php endif; ?>
-<?php endif; ?>
-                                        <!-- زر عرض متجر المستخدم -->
-                                        <!-- زر عرض متجر المستخدم -->
-<?php 
-// التحقق من وجود متجر فعلي للمستخدم
-$hasStore = hasCustomerStore($storeOwnerId);
-$storeProductsCount = getCustomerStoreProductsCount($storeOwnerId);
-?>
-<?php if ($hasStore && $storeProductsCount > 1): ?>
-    <button class="view-store-btn" 
-            onclick="openCustomerStorePopup(<?= $storeOwnerId ?>, '<?= addslashes($storeOwnerName) ?>')"
-            title="عرض جميع منتجات متجر <?= htmlspecialchars($storeOwnerName) ?>">
-        <i class="fas fa-store"></i>
-		<i class="fas fa-truck"></i>
-<i class="fas fa-undo"></i>
-<i class="fas fa-shield-alt"></i>
-          (+<?= $storeProductsCount - 1 ?>)
-    </button>
-<?php elseif ($hasStore): ?>
-    <button class="view-store-btn" 
-            onclick="openCustomerStorePopup(<?= $storeOwnerId ?>, '<?= addslashes($storeOwnerName) ?>')"
-            title="عرض متجر <?= htmlspecialchars($storeOwnerName) ?>">
-        <i class="fas fa-store"></i>
-         
-    </button>
-<?php endif; ?>
-                                    <?php endif; ?>
-
-                                    <!-- أيقونة المفضلة -->
-                                    <button class="wishlist-btn <?= $isInWishlist ? 'active' : '' ?>" 
-                                            onclick="toggleWishlist(<?= $product['id'] ?>, this)">
-                                        <i class="<?= $isInWishlist ? 'fas' : 'far' ?> fa-heart"></i>
-                                    </button>
-									                                    <!-- أيقونة المفضلة -->
-                                    <button class="view-store-btn" style="TOP: 50.6%;RIGHT: 50.6%;"> 
-                                        <i class="fa-solid fa-hand-holding-droplet"></i>
-                                    </button>
-                                    <!-- أيقونة حالة المنتج -->
-                                    <?php 
-                                    $condition = getProductCondition($product['product_condition']);
-                                    if ($product['product_condition'] != 'new'): ?>
-                                    <div class="product-condition-badge" style="
-                                        position: absolute;
-                                        top: 10px;
-                                        right: 10px;
-                                        background: <?= $condition['color'] ?>;
-                                        color: white;
-                                        padding: 0.25rem 0.5rem;
-                                        border-radius: 15px;
-                                        font-size: 0.75rem;
-                                        z-index: 10;
-                                    ">
-                                        <i class="<?= $condition['icon'] ?>"></i>
-                                        <?= $condition['label'] ?>
-                                    </div>
-                                    <?php endif; ?>
-
-                                    <!-- أيقونة العرض الخاص -->
-                                    <?php 
-                                    $specialOffer = getSpecialOfferIcon($product['special_offer_type'], $product['special_offer_value']);
-                                    if ($specialOffer): ?>
-                                    <div class="special-offer-badge" 
-                                         style="position: absolute; top: 45px; right: 10px; background: <?= $specialOffer['color'] ?>; color: white; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.75rem; z-index: 10; cursor: pointer;"
-                                         onclick="openScratchCard(<?= $product['id'] ?>)"
-                                         title="<?= $specialOffer['text'] ?>">
-                                        <i class="<?= $specialOffer['icon'] ?>"></i>
-                                        خربش واكسب
-                                    </div>
-                                    <?php endif; ?>
-
-                                    <!-- زر التفاوض -->
-                                    <?php if (isNegotiationEnabled()): ?>
-                                    <button class="negotiation-btn <?= hasActiveNegotiation($_SESSION['customer_id'] ?? 0, $product['id']) ? 'negotiated' : '' ?>" 
-                                            id="negotiate-btn-<?= $product['id'] ?>"
-                                            onclick="openNegotiation(<?= $product['id'] ?>, <?= $product['final_price'] ?>)"
-                                            title="تفاوض على السعر">
-                                        <i class="fas fa-handshake"></i>
-                                    </button>
-                                    <?php endif; ?>
-
-                                    <!-- العد التنازلي للسعر -->
-                                    <?php if ($countdown): ?>
-                                    <div class="countdown-timer" style="
-                                        position: absolute;
-                                        top: 100px;
-                                        left: 10px;
-                                        background: #dc3545;
-                                        color: white;
-                                        padding: 0.5rem;
-                                        border-radius: 5px;
-                                        font-size: 0.8rem;
-                                        z-index: 10;
-                                        text-align: center;
-                                    " id="countdown-<?= $product['id'] ?>">
-                                        <div><i class="fa-solid fa-bomb"></i></div>
-                                        <div id="timer-<?= $product['id'] ?>" class="countdown-time">
-                                            <?= getAuctionTimeLeft($countdown['countdown_end']) ?>
-                                        </div>
-                                        <div class="new-price"><?= formatPrice($countdown['new_price']) ?></div>
-                                    </div>
-                                    <?php endif; ?>
-
-                                    <!-- أيقونة المزاد -->
-                                    <?php if ($isAuctionActive): ?>
-                                    <button class="auction-icon" onclick="openAuctionModal(<?= $product['id'] ?>)" title="عرض المزاد والمشاركين">
-                                        <i class="fas fa-gavel"></i>
-                                    </button>
-                                    <?php endif; ?>
-
-                                    <?php if ($product['discount_percentage'] > 0): ?>
-                                        <span class="badge-discount">-<?= $product['discount_percentage'] ?>%</span>
-                                    <?php endif; ?>
-                                    
-                                    <?php if ($product['stock'] < 5 && $product['stock'] > 0): ?>
-                                        <span class="badge-stock">متبقي <?= $product['stock'] ?> فقط</span>
-                                    <?php elseif ($product['stock'] == 0): ?>
-                                        <span class="badge-out">نفذت الكمية</span>
-                                    <?php endif; ?>
-                                    
-                                    <a href="product.php?id=<?= $product['id'] ?>" class="product-image">
-                                        <img src="<?= htmlspecialchars($product['main_image'] ?: 'assets/images/placeholder.jpg') ?>" 
-                                             alt="<?= htmlspecialchars($product['title']) ?>">
-                                    </a>
-                                    
-                                    <div class="product-info">
-                                        <h3 class="product-title">
-                                            <a href="product.php?id=<?= $product['id'] ?>">
-                                                <?= htmlspecialchars($product['title']) ?>
-                                            </a>
-                                        </h3>
-                                        
-                                        <!-- اسم صاحب المتجر -->
-                                        <?php if ($isCustomerStore && $storeOwnerName): ?>
-                                        <div class="store-owner" style="
-                                            color: #8b5cf6;
-                                            font-size: 0.875rem;
-                                            font-weight: 600;
-                                            margin-bottom: 0.5rem;
-                                            display: flex;
-                                            align-items: center;
-                                            gap: 0.5rem;
-                                        ">
-                                            <i class="fas fa-user-circle"></i>
-                                            من متجر: <?= htmlspecialchars($storeOwnerName) ?>
-											<i class="fa-solid fa-location-dot"></i>
-                                        </div>
-                                        <?php endif; ?>
-                                        
-                                        <div class="product-rating">
-                                            <?php 
-                                            $rating = $product['rating_avg'];
-                                            for ($i = 1; $i <= 5; $i++): 
-                                                if ($i <= $rating): ?>
-                                                    <i class="fas fa-star"></i>
-                                                <?php elseif ($i - 0.5 <= $rating): ?>
-                                                    <i class="fas fa-star-half-alt"></i>
-                                                <?php else: ?>
-                                                    <i class="far fa-star"></i>
-                                                <?php endif;
-                                            endfor; ?>
-                                            <span>(<?= $product['rating_count'] ?>)</span>
-                                        </div>
-
-                                        <!-- معلومات النقاط -->
-                                        <?php if (getSetting('points_enabled', '1') == '1'): ?>
-                                        <div class="product-points" style="margin: 0.5rem 0; color: #f59e0b; font-size: 0.875rem;">
-                                            <i class="fas fa-coins"></i>
-                                            اكسب <?= calculatePointsFromPurchase($product['final_price']) ?> نقطة
-                                        </div>
-                                        <?php endif; ?>
-
-                                        <!-- سعر المنتج -->
-                                        <div class="product-price">
-                                            <?php if ($isAuctionActive): ?>
-                                                <div class="auction-price">
-                                                    <span class="price-label">السعر الحالي:</span>
-                                                    <span class="price-new"><?= formatPrice(max($product['current_bid'], $product['starting_price'])) ?></span>
-                                                    <div class="bid-count">(<?= $product['bid_count'] ?> مزايدة)</div>
-                                                </div>
-                                            <?php elseif ($product['discount_percentage'] > 0): ?>
-                                                <span class="price-old"><?= formatPrice($product['price']) ?></span>
-                                                <span class="price-new"><?= formatPrice($product['final_price']) ?></span>
-                                            <?php else: ?>
-                                                <span class="price-new"><?= formatPrice($product['price']) ?></span>
-                                            <?php endif; ?>
-                                        </div>
-                                        
-                                        <!-- أزرار الإجراءات -->
-                                        <?php if ($isAuctionActive): ?>
-                                            <button class="btn btn-auction" onclick="openAuctionModal(<?= $product['id'] ?>)">
-                                                <i class="fas fa-gavel"></i> شارك في المزاد
-                                            </button>
-                                        <?php elseif ($product['stock'] > 0): ?>
-                                            <button class="btn btn-add-cart" onclick="addToCart(<?= $product['id'] ?>)">
-                                                <i class="fas fa-cart-plus"></i> أضف للسلة
-                                            </button>
-                                        <?php else: ?>
-                                            <button class="btn btn-disabled" disabled>
-                                                نفذت الكمية
-                                            </button>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- Pagination -->
-                    <?php if (count($products) >= $perPage): ?>
-                    <div class="pagination">
-                        <?php if ($page > 1): ?>
-                            <a href="?page=<?= $page - 1 ?><?= $categoryId ? '&category=' . $categoryId : '' ?><?= $search ? '&search=' . urlencode($search) : '' ?>&sort=<?= $sort ?>" 
-                               class="page-link">السابق</a>
-                        <?php endif; ?>
-                        
-                        <span class="page-current">صفحة <?= $page ?></span>
-                        
-                        <a href="?page=<?= $page + 1 ?><?= $categoryId ? '&category=' . $categoryId : '' ?><?= $search ? '&search=' . urlencode($search) : '' ?>&sort=<?= $sort ?>" 
-                           class="page-link">التالي</a>
-                    </div>
-                    <?php endif; ?>
-                <?php endif; ?>
-            </section>
-        </div>
-    </div>
-</main>
-     <?php if (!$search && !$categoryId): ?>
+<?php require 'ads.php' ?>
+	<?php if (!$search && !$categoryId): ?>
 
     <!-- Hero Section -->
    
@@ -3971,6 +3205,8 @@ $buy2Get1Products = getBuyTwoGetOneProducts(8);
     </section>
     <?php endif; ?> 
     <?php endif; ?> 
+
+
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
@@ -4069,6 +3305,13 @@ $buy2Get1Products = getBuyTwoGetOneProducts(8);
     
     <input type="hidden" id="negotiation-product-id">
 </div>
+<!-- تضمين السطر الذكي الجانبي -->
+<?php include 'smart_command_sidebar.php'; ?>
+
+<!-- زر تشغيل السطر الذكي -->
+<button class="smart-command-trigger">
+    <i class="fas fa-robot"></i>
+</button>
 <script>
   
 
@@ -4812,9 +4055,25 @@ function updateWalletBalance(newBalance) {
 
 // تحديث النقاط ديناميكياً
 function updatePointsCount(newPoints) {
-    const pointsCount = document.getElementById('points-count');
-    if (pointsCount) {
-        pointsCount.textContent = newPoints.toLocaleString();
+   // const pointsCount = document.getElementById('points-count');
+   // if (pointsCount) {
+   //     pointsCount.textContent = newPoints.toLocaleString();
+	//	
+   // }
+	
+	    const pointsElement = document.getElementById('points-count');
+    if (!pointsElement) {
+        console.warn('عنصر النقاط غير موجود');
+        return;
+    }
+    
+    const pointsText = pointsElement.innerText || '0';
+    const pointsNumber = parseInt(pointsText) || 0;
+    
+    try {
+        pointsElement.innerText = pointsNumber.toLocaleString();
+    } catch (e) {
+        pointsElement.innerText = pointsNumber.toString();
     }
 }
 
@@ -5677,6 +4936,65 @@ document.addEventListener('DOMContentLoaded', addTooltipAnimations);
  
 </div>
  
-
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "<?= htmlspecialchars($storeName) ?>",
+  "description": "<?= htmlspecialchars($storeDescription) ?>",
+  "url": "<?= getBaseUrl() ?>",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "<?= getBaseUrl() ?>index.php?search={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<script>
+// دمج نظام الأوامر الذكية مع الصفحة الرئيسية
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة أمر سريع للمنتجات
+    document.querySelectorAll('.product-card').forEach(card => {
+        const productName = card.querySelector('.product-title').textContent.trim();
+        const productPrice = card.querySelector('.price-new').textContent.trim();
+        const productId = card.querySelector('.btn-add-cart')?.getAttribute('onclick')?.match(/\d+/)?.[0];
+        
+        if (productId) {
+            const quickCommandBtn = document.createElement('button');
+            quickCommandBtn.className = 'quick-command-btn';
+            quickCommandBtn.innerHTML = '<i class="fas fa-bolt"></i>';
+            quickCommandBtn.title = 'أضف أمراً ذكياً لهذا المنتج';
+            quickCommandBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: #10b981;
+                color: white;
+                border: none;
+                width: 35px;
+                height: 35px;
+                border-radius: 50%;
+                cursor: pointer;
+                z-index: 5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            `;
+            
+            quickCommandBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const command = `تتبع سعر ${productName} عندما يصبح أقل من ${productPrice}`;
+                document.querySelector('.command-input').value = command;
+                document.querySelector('.smart-command-sidebar').classList.add('active');
+            });
+            
+            card.style.position = 'relative';
+            card.appendChild(quickCommandBtn);
+        }
+    });
+});
+</script>
 </body>
 </html>

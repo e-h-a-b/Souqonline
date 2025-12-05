@@ -61,4 +61,4 @@ $page_title = "مسح كود QR - المتجر";
 // كود الجافاسكريبت للماسح الضوئي (مشابه للكود السابق)
 </script>
 
-<?php include 'includes/footer.php'; ?>
+<?php //include 'includes/footer.php'; ?>

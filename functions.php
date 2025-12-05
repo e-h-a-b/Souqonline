@@ -4215,7 +4215,7 @@ function getBlackFridayCategories() {
 function getBlackFridaySettings() {
     return [
         'enabled' => getSetting('black_friday_enabled', '1') == '1',
-        'start_date' => getSetting('black_friday_start_date', '11-24'),
+        'start_date' => getSetting('black_friday_start_date', '11-20'),
         'duration_days' => (int) getSetting('black_friday_duration_days', 3),
         'discount_percentage' => (float) getSetting('black_friday_discount_percentage', 50),
         'categories' => getBlackFridayCategories(),
@@ -4457,14 +4457,23 @@ function getBlackFridayStatus() {
 // ==================== نظام الكاشباك (Cashback) ====================
 
 // الحصول على إعدادات الكاشباك
+// دوال إدارة الكاشباك
 function getCashbackSettings() {
-    return [
-        'enabled' => getSetting('cashback_enabled', '1') == '1',
-        'percentage' => (float) getSetting('cashback_percentage', '5'),
-        'min_amount' => (float) getSetting('cashback_min_amount', '0'),
-        'max_amount' => (float) getSetting('cashback_max_amount', '100'),
-        'categories' => json_decode(getSetting('cashback_categories', '[]'), true) ?: []
+    global $pdo;
+    
+    $settings = [
+        'enabled' => getSetting('cashback_enabled', '0'),
+        'percentage' => getSetting('cashback_percentage', '5'),
+        'min_amount' => getSetting('cashback_min_amount', '0'),
+        'max_amount' => getSetting('cashback_max_amount', '100'),
+        'categories' => []
     ];
+    
+    // جلب الفئات المشمولة
+    $categories_json = getSetting('cashback_categories', '[]');
+    $settings['categories'] = json_decode($categories_json, true) ?: [];
+    
+    return $settings;
 }
 
 // الحصول على كاشباك منتج معين
@@ -4695,7 +4704,49 @@ function addCustomerPoints($customer_id, $points, $type = 'manual', $description
         return false;
     }
 }
- 
+ /**
+ * إضافة نقاط للعميل (محدثة لتتوافق مع قاعدة البيانات)
+ */
+function addCustomerPoints20($customer_id, $points, $description = '', $reference_type = 'manual', $reference_id = null, $expire_days = 365) {
+    global $pdo;
+    
+    try {
+        // بدء transaction
+        $pdo->beginTransaction();
+        
+        // 1. تحديث أو إدخال رصيد النقاط في customer_points
+        $stmt = $pdo->prepare("
+            INSERT INTO customer_points (customer_id, points, total_earned) 
+            VALUES (?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+            points = points + VALUES(points),
+            total_earned = total_earned + VALUES(total_earned)
+        ");
+        $stmt->execute([$customer_id, $points, $points]);
+        
+        // 2. تسجيل العملية في point_transactions (متوافق مع الهيكل الحالي)
+        $stmt = $pdo->prepare("
+            INSERT INTO point_transactions (customer_id, points, type, description, reference_type, reference_id, expires_at)
+            VALUES (?, ?, 'earn', ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
+        ");
+        $stmt->execute([
+            $customer_id, 
+            $points, 
+            $description, 
+            $reference_type, 
+            $reference_id, 
+            $expire_days
+        ]);
+        
+        $pdo->commit();
+        return true;
+        
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        error_log("Error adding customer points: " . $e->getMessage());
+        return false;
+    }
+}
 /**
  * الحصول على نقاط المستخدم
  */
@@ -5662,3 +5713,91 @@ function cleanInput1($data) {
     return htmlspecialchars(trim($data), ENT_QUOTES, 'UTF-8');
 }
 ?>
+ 
+<?php
+ 
+// دالة لجلب جميع الوسائط للمنتج
+function getProductMedia($productId) {
+    global $pdo;
+    
+    try {
+        $stmt = $pdo->prepare("
+            SELECT *, 
+                   CASE WHEN media_type = '3d_model' THEN 0 ELSE 1 END as priority
+            FROM product_media 
+            WHERE product_id = :product_id
+            ORDER BY priority ASC, is_main DESC, display_order ASC
+        ");
+        $stmt->execute(['product_id' => $productId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+    } catch (Exception $e) {
+        error_log("getProductMedia Error: " . $e->getMessage());
+        return [];
+    }
+}// دالة بديلة أكثر أماناً
+function getProductMediaSafe($productId) {
+    // إذا كان الجدول غير موجود، نرجع مصفوفة فارغة
+    $media = [];
+    
+    // يمكنك إضافة بيانات تجريبية هنا للاختبار
+    // $media[] = [
+    //     'media_type' => 'image',
+    //     'media_url' => 'assets/images/products/product_' . $productId . '.jpg',
+    //     'thumbnail_url' => 'assets/images/products/thumb_' . $productId . '.jpg',
+    //     'is_main' => 1,
+    //     'autoplay' => 0,
+    //     'loop' => 0,
+    //     'controls' => 0
+    // ];
+    
+    return $media;
+} 
+
+// دالة لإضافة وسائط جديدة للمنتج
+function addProductMedia($productId, $mediaData) {
+    global $pdo;
+    
+    $stmt = $pdo->prepare("
+        INSERT INTO product_media (product_id, media_type, media_url, thumbnail_url, display_order, is_main, autoplay, loop, controls) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    
+    $stmt->bind_param("isssiiiii", 
+        $productId,
+        $mediaData['media_type'],
+        $mediaData['media_url'],
+        $mediaData['thumbnail_url'],
+        $mediaData['display_order'],
+        $mediaData['is_main'],
+        $mediaData['autoplay'],
+        $mediaData['loop'],
+        $mediaData['controls']
+    );
+    
+    return $stmt->execute();
+}
+
+// دالة للتحقق من نوع الملف
+function getMediaType($filename) {
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    
+    $imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'bmp'];
+    $videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
+    $modelExtensions = ['glb', 'gltf', 'obj'];
+    
+    if (in_array($extension, $imageExtensions)) {
+        return 'image';
+    } elseif (in_array($extension, $videoExtensions)) {
+        return 'video';
+    } elseif (in_array($extension, $modelExtensions)) {
+        return '3d_model';
+    } elseif ($extension === 'gif') {
+        return 'gif';
+    }
+    
+    return 'image'; // افتراضي
+}
+?>
+
+ 

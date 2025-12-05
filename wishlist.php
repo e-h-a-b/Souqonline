@@ -178,6 +178,7 @@ $cartCount = getCartCount();
     }
 
     .btn-remove {
+		width:auto;
         background: #dc3545;
         color: white;
         border: none;
