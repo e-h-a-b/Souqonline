@@ -185,8 +185,8 @@ $adminName = $_SESSION['admin_name'] ?? 'المسؤول';
             transition: transform 0.3s;
         }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
-        .stat-info h3 { font-size: 14px; color: #64748b; margin-bottom: 8px; }
-        .stat-info .number { font-size: 32px; font-weight: 700; color: #1e293b; }
+        .stat-info h3 { font-size: 14px; color: white; margin-bottom: 8px; }
+        .stat-info .number { font-size: 32px; font-weight: 700; color: white; }
         .stat-icon {
             width: 60px;
             height: 60px;
@@ -196,11 +196,7 @@ $adminName = $_SESSION['admin_name'] ?? 'المسؤول';
             justify-content: center;
             font-size: 24px;
         }
-        .stat-card.blue .stat-icon { background: #dbeafe; color: #2563eb; }
-        .stat-card.green .stat-icon { background: #dcfce7; color: #16a34a; }
-        .stat-card.orange .stat-icon { background: #fed7aa; color: #ea580c; }
-        .stat-card.purple .stat-icon { background: #e9d5ff; color: #9333ea; }
-        
+ 
         /* Tables */
         .card {
             background: #fff;
@@ -269,6 +265,246 @@ $adminName = $_SESSION['admin_name'] ?? 'المسؤول';
             color: #94a3b8;
         }
     </style>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f8fafc;
+        color: #334155;
+    }
+    .admin-wrapper { display: flex; min-height: 100vh; }
+    
+    /* Sidebar */
+    .sidebar {
+        width: 260px;
+        background: #1e293b;
+        color: #fff;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+    }
+    .sidebar-header {
+        padding: 25px 20px;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header h2 {
+        font-size: 20px;
+        color: #fff;
+    }
+    .sidebar-menu { padding: 20px 0; }
+    .menu-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 20px;
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .menu-item:hover, .menu-item.active {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+    .menu-item i { width: 20px; }
+    
+    /* Main Content */
+    .main-content {
+        flex: 1;
+        margin-right: 260px;
+        padding: 30px;
+    }
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .page-title h1 { font-size: 28px; color: #1e293b; }
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #fff;
+    }
+    
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: transform 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    .stat-info h3 { font-size: 14px; color: white; margin-bottom: 8px; }
+    .stat-info .number { font-size: 32px; font-weight: 700; color: white; }
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+    }
+    
+ 
+    
+    /* Tables */
+    .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    .card-header h2 { font-size: 20px; color: #1e293b; }
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s;
+    }
+    .btn-primary { background: #2563eb; color: #fff; }
+    .btn-primary:hover { background: #1d4ed8; }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 12px;
+        text-align: right;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #475569;
+    }
+    tr:hover { background: #f8fafc; }
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+    
+    /* Charts Placeholder */
+    .chart-container {
+        height: 300px;
+        background: #f8fafc;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+    }
+	/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+.stat-card {
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.3s;
+    position: relative;
+    overflow: hidden;
+    color: white;
+    min-height: 120px;
+}
+.stat-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
+}
+.stat-info h3 { 
+    font-size: 14px; 
+    margin-bottom: 8px; 
+    opacity: 0.9;
+}
+.stat-info .number { 
+    font-size: 32px; 
+    font-weight: 700; 
+    margin-bottom: 5px;
+}
+.stat-info small { 
+    opacity: 0.8; 
+    font-size: 12px; 
+}
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    background: rgba(255,255,255,0.2);
+}
+
+/* ألوان الكروت المتدرجة */
+.stat-card.blue { background: linear-gradient(135deg, #667eea, #764ba2); }
+.stat-card.orange { background: linear-gradient(135deg, #f093fb, #f5576c); }
+.stat-card.green { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+.stat-card.purple { background: linear-gradient(135deg, #a78bfa, #c4b5fd); }
+
+.stat-card.pink { background: linear-gradient(135deg, #ff6b6b, #ff8e8e); }
+.stat-card.yellow { background: linear-gradient(135deg, #ffd700, #ffed4e); }
+.stat-card.cyan { background: linear-gradient(135deg, #4ecdc4, #88dac8); }
+.stat-card.indigo { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+.stat-card.teal { background: linear-gradient(135deg, #10b981, #34d399); }
+.stat-card.red { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+.stat-card.gray { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+</style>
 <?php
 
 // في أعلى index.php، بعد getProducts()
@@ -364,23 +600,23 @@ $betweenAds = getActiveAds('between_products');
             		
 <!-- في قسم الإحصائيات -->
 
-<div class="stat-card">
-    <div class="stat-icon" style="background: #f0f9ff; color: #0369a1;">
-        <i class="fas fa-share-alt"></i>
-    </div>
+<div class="stat-card gray">
     <div class="stat-info">
-        <h3><?= number_format($referral_stats['total_referrers'] ?? 0) ?></h3>
-        <p>المحيلين النشطين</p>
+	 <h3>المحيلين النشطين</h3>
+       <div class="number" style="color: white;"><?= number_format($referral_stats['total_referrers'] ?? 0) ?></div>
+    </div>
+    <div class="stat-icon"  >
+        <i class="fas fa-share-alt"></i>
     </div>
 </div>
 
-<div class="stat-card">
-    <div class="stat-icon" style="background: #f0fdf4; color: #16a34a;">
-        <i class="fas fa-handshake"></i>
-    </div>
+<div class="stat-card indigo ">
     <div class="stat-info">
-        <h3><?= number_format($referral_stats['successful_referrals'] ?? 0) ?></h3>
-        <p>إحالات ناجحة</p>
+	<h3>إحالات ناجحة</h3>
+        <div class="number" style="color: white;"><?= number_format($referral_stats['successful_referrals'] ?? 0) ?></div>
+    </div>
+    <div class="stat-icon"  >
+        <i class="fas fa-handshake"></i>
     </div>
 </div>					
 			<!-- في قسم الإحصائيات بعد البطاقات الحالية -->

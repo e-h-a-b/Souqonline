@@ -30,10 +30,27 @@ if ($_POST && isset($_POST['update_order_status'])) {
         $error = "حدث خطأ أثناء تحديث حالة الطلب";
     }
 }
-
+// معالجة الإضافة اليدوية للنقاط
+if ($_POST && isset($_POST['add_points_manual'])) {
+    $order_id = (int)$_POST['order_id'];
+    
+    try {
+        $success = processPackagePayment($order_id);
+        
+        if ($success) {
+            $message = "تم إضافة النقاط للعميل بنجاح";
+        } else {
+            $error = "فشل في إضافة النقاط للعميل";
+        }
+    } catch (Exception $e) {
+        $error = "حدث خطأ أثناء إضافة النقاط: " . $e->getMessage();
+    }
+}
+// جلب جميع طلبات الباقات
 // جلب جميع طلبات الباقات
 $stmt = $pdo->query("
-    SELECT po.*, p.name as package_name, c.first_name, c.last_name, c.email, c.phone
+    SELECT po.*, p.name as package_name, p.points, p.bonus_points,
+           c.first_name, c.last_name, c.email, c.phone
     FROM package_orders po
     JOIN packages p ON po.package_id = p.id
     JOIN customers c ON po.customer_id = c.id
@@ -317,14 +334,28 @@ $orders = $stmt->fetchAll();
                                     </td>
                                     <td style="padding: 1rem; text-align: center;">
                                         <?= date('Y-m-d H:i', strtotime($order['created_at'])) ?>
-                                    </td>
-                                    <td style="padding: 1rem; text-align: center;">
-                                        <?php if ($order['points_added']): ?>
-                                            <span class="badge badge-success">تمت إضافة النقاط</span>
-                                        <?php else: ?>
-                                            <span class="badge badge-warning">بانتظار النقاط</span>
-                                        <?php endif; ?>
-                                    </td>
+                                    </td> 
+<td style="padding: 1rem; text-align: center;">
+    <div style="display: flex; flex-direction: column; gap: 5px; align-items: center;">
+        <?php if ($order['points_added']): ?>
+            <span class="badge badge-success">
+                <i class="fas fa-check-circle"></i> تمت إضافة النقاط
+            </span>
+        <?php else: ?>
+            <span class="badge badge-warning">
+                <i class="fas fa-clock"></i> بانتظار النقاط
+            </span>
+            <?php if ($order['payment_status'] === 'paid'): ?>
+                <form method="post" style="margin: 0;">
+                    <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
+                    <button type="submit" name="add_points_manual" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus-circle"></i> إضافة النقاط يدوياً
+                    </button>
+                </form>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</td> 
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>

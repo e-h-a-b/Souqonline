@@ -300,6 +300,146 @@ $orders_stats = $orders_stats_stmt->fetch();
             justify-content: center;
             color: #94a3b8;
         }
+		/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 25px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* Form Styles */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+/* Checkbox Styles */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+.checkbox-group label {
+    margin: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+/* Button Styles */
+.btn-secondary {
+    background: #6b7280;
+    color: #fff;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background: #b91c1c;
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: #2563eb;
+    border: 1px solid #2563eb;
+}
+
+.btn-outline-primary:hover {
+    background: #2563eb;
+    color: #fff;
+}
+
+/* Table Actions */
+.table-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 20px;
+    }
+}
     </style>
 </head>
 <body>
@@ -663,6 +803,33 @@ $orders_stats = $orders_stats_stmt->fetch();
                 event.target.style.display = 'none';
             }
         }
+		// إضافة إلى قسم JavaScript الموجود
+function resetAddPackageForm() {
+    document.getElementById('addPackageModal').querySelector('form').reset();
+    document.getElementById('is_active').checked = true;
+}
+
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'block';
+    // منع التمرير في الخلفية
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    // إعادة التمرير
+    document.body.style.overflow = 'auto';
+    
+    // إعادة تعيين نموذج الإضافة عند الإغلاق
+    if (modalId === 'addPackageModal') {
+        resetAddPackageForm();
+    }
+}
+// في قسم إضافة الباقة - بعد cleanInput
+if (empty($name) || $price <= 0 || $points <= 0) {
+    $error = "الرجاء ملء جميع الحقول المطلوبة بشكل صحيح";
+    // يمكنك إضافة المزيد من التحقق هنا
+}
     </script>
 </body>
 </html>

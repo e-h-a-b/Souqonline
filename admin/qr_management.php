@@ -2,7 +2,7 @@
 session_start();
 require_once '../config.php';
 require_once '../functions.php';
-require_once 'qr_functions.php';
+require_once '../qr_functions.php';
 
 if (!isset($_SESSION['customer_id'])) {
     header('Location: login.php');

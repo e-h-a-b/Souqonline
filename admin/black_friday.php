@@ -4,6 +4,9 @@ require_once '../config.php';
  
 require_once '../functions.php';
  
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 // جلب الفئات
 function getCategories1() {
@@ -25,13 +28,14 @@ function updateSetting1($key, $value) {
 }
 
 // جلب الإعدادات
-function getSetting($key, $default = '') {
+function getSetting1($key, $default = '') {
     global $pdo;
     $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = ?");
     $stmt->execute([$key]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ? $result['setting_value'] : $default;
 }
+
 
 if ($_POST) {
     // حفظ إعدادات الجمعة البيضاء
@@ -60,15 +64,15 @@ if ($_POST) {
 }
 
 // جلب الإعدادات الحالية
-$enabled = getSetting('black_friday_enabled') == '1';
-$startDate = getSetting('black_friday_start_date', '11-24');
-$durationDays = getSetting('black_friday_duration_days', '3');
-$discountPercentage = getSetting('black_friday_discount_percentage', '50');
-$testMode = getSetting('black_friday_test_mode') == '1';
-$testDate = getSetting('black_friday_test_date');
-$categoriesJson = getSetting('black_friday_categories', '[]');
+$enabled = getSetting1('black_friday_enabled') == '1';
+$startDate = getSetting1('black_friday_start_date', '11-24');
+$durationDays = getSetting1('black_friday_duration_days', '3');
+$discountPercentage = getSetting1('black_friday_discount_percentage', '50');
+$testMode = getSetting1('black_friday_test_mode') == '1';
+$testDate = getSetting1('black_friday_test_date');
+$categoriesJson = getSetting1('black_friday_categories', '[]');
 $selectedCategories = json_decode($categoriesJson, true) ?: [];
-
+ 
 $allCategories = getCategories1();
 $status = getBlackFridayStatus();
 ?>
@@ -488,25 +492,25 @@ $status = getBlackFridayStatus();
         <form method="post">
             <!-- الإعدادات الأساسية -->
             <div class="form-group checkbox-group">
-                <input type="checkbox" name="enabled" value="1" <?= $enabled ? 'checked' : '' ?> id="enabled">
+                <input type="checkbox" id ="enabled" name="enabled" value="1" <?= $enabled ? 'checked' : '' ?> id="enabled">
                 <label for="enabled">تفعيل نظام الجمعة البيضاء</label>
             </div>
 
             <div class="form-group">
                 <label for="start_date">تاريخ البداية (شهر-يوم)</label>
-                <input type="text" name="start_date" value="<?= htmlspecialchars($startDate) ?>" placeholder="11-24" required>
+                <input type="text" id="start_date" name="start_date" value="<?= htmlspecialchars($startDate) ?>" placeholder="11-24" required>
                 <small>الصيغة: MM-DD (مثال: 11-24)</small>
             </div>
 
             <div class="form-group">
                 <label for="duration_days">مدة العرض (أيام)</label>
-                <input type="number" name="duration_days" value="<?= htmlspecialchars($durationDays) ?>" min="1" max="30" required>
+                <input type="number" id ="duration_days" name="duration_days" value="<?= htmlspecialchars($durationDays) ?>" min="1" max="30" required>
                 <small>من 1 إلى 30 يوم</small>
             </div>
 
             <div class="form-group">
                 <label for="discount_percentage">نسبة الخصم (%)</label>
-                <input type="number" name="discount_percentage" value="<?= htmlspecialchars($discountPercentage) ?>" min="1" max="90" required>
+                <input type="number" id="discount_percentage" name="discount_percentage" value="<?= htmlspecialchars($discountPercentage) ?>" min="1" max="90" required>
                 <small>من 1% إلى 90%</small>
             </div>
 

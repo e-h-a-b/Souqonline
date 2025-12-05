@@ -7,12 +7,15 @@ function getCashbackProducts1() {
     global $pdo;
     $stmt = $pdo->prepare("
         SELECT p.id, p.title, p.price, p.final_price, 
-               pc.cashback_percentage, pc.cashback_amount, pc.is_active,
-               pc.start_date, pc.end_date, pc.created_at
+               pc.cashback_percentage, pc.cashback_amount, 
+               pc.is_active, pc.start_date, pc.end_date, pc.created_at
         FROM products p
-        LEFT JOIN product_cashback pc ON p.id = pc.product_id AND pc.is_active = 1
+        LEFT JOIN product_cashback pc ON p.id = pc.product_id
         WHERE p.is_active = 1
-        ORDER BY pc.cashback_percentage DESC, p.title
+        ORDER BY 
+            (pc.cashback_percentage IS NOT NULL AND pc.is_active = 1) DESC,
+            pc.cashback_percentage DESC, 
+            p.title
     ");
     $stmt->execute();
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -69,13 +72,17 @@ function updateProductCashback1($productId, $percentage, $amount, $startDate, $e
     return $stmt->execute([$productId, $percentage, $amount ?: 0, $startDate ?: null, $endDate ?: null]);
 }
 
-function deactivateProductCashback1($productId) {
+function deactivateProductCashback($productId) {
     global $pdo;
-    
     $stmt = $pdo->prepare("UPDATE product_cashback SET is_active = 0 WHERE product_id = ?");
     return $stmt->execute([$productId]);
 }
 
+function deleteProductCashback($productId) {
+    global $pdo;
+    $stmt = $pdo->prepare("DELETE FROM product_cashback WHERE product_id = ?");
+    return $stmt->execute([$productId]);
+}// معالجة النماذج
 // معالجة النماذج
 if ($_POST) {
     if (isset($_POST['update_settings'])) {
@@ -122,18 +129,32 @@ if ($_POST) {
         }
         
         $message = "تم تطبيق الكاشباك على {$updated} منتج";
-        
-    } elseif (isset($_GET['deactivate'])) {
-        // تعطيل كاشباك منتج
-        if (deactivateProductCashback($_GET['deactivate'])) {
-            $message = "تم تعطيل الكاشباك بنجاح";
-        }
     }
-    
-    header('Location: cashback.php?success=1&message=' . urlencode($message ?? ''));
-    exit;
 }
 
+// معالجة طلبات GET للتعطيل والحذف
+if ($_GET) {
+    if (isset($_GET['deactivate'])) {
+        $productId = (int)$_GET['deactivate'];
+        if (deactivateProductCashback($productId)) {
+            $message = "تم تعطيل الكاشباك بنجاح";
+        } else {
+            $error = "حدث خطأ أثناء تعطيل الكاشباك";
+        }
+        header('Location: cashback.php?success=1&message=' . urlencode($message ?? $error));
+        exit;
+        
+    } elseif (isset($_GET['delete_cashback'])) {
+        $productId = (int)$_GET['delete_cashback'];
+        if (deleteProductCashback($productId)) {
+            $message = "تم إلغاء الكاش باك نهائيًا من المنتج";
+        } else {
+            $error = "فشل حذف الكاش باك";
+        }
+        header('Location: cashback.php?success=1&message=' . urlencode($message ?? $error));
+        exit;
+    }
+}
 // جلب البيانات
 $settings = getCashbackSettings();
 $products = getCashbackProducts1();
@@ -911,6 +932,8 @@ $allProducts = getProducts(['limit' => 1000]); // جميع المنتجات
                         <div class="product-price"><?= formatPrice($product['final_price']) ?></div>
                         
                         <?php if ($product['cashback_percentage']): ?>
+						<!-- عرض الكاش باك النشط -->
+    <div class="cashback-badge">نشط <?= $product['cashback_percentage'] ?>%</div>
                             <div class="cashback-info">
                                 <div><strong>نسبة الكاشباك:</strong> <?= $product['cashback_percentage'] ?>%</div>
                                 <?php if ($product['cashback_amount'] > 0): ?>
@@ -924,16 +947,31 @@ $allProducts = getProducts(['limit' => 1000]); // جميع المنتجات
                                 <?php endif; ?>
                             </div>
                             
-                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
-                                <a href="?deactivate=<?= $product['id'] ?>" class="btn btn-danger" 
-                                   onclick="return confirm('هل أنت متأكد من تعطيل الكاشباك؟')">
-                                    <i class="fas fa-times"></i> تعطيل
+                            <div style="margin-top: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                <!-- زر التعطيل (يبقي السجل لكن يعطله) -->
+                                <a href="?deactivate=<?= $product['id'] ?>" class="btn btn-warning" 
+                                   onclick="return confirm('هل أنت متأكد من تعطيل الكاشباك مؤقتًا؟')">
+                                    <i class="fas fa-pause"></i> تعطيل مؤقت
+                                </a>
+                            
+                                <!-- زر الإلغاء النهائي (يحذف السجل تمامًا) -->
+                                <a href="?delete_cashback=<?= $product['id'] ?>" class="btn btn-danger" 
+                                   onclick="return confirm('⚠️ تحذير: هذا الإجراء نهائي!\nسيتم حذف الكاش باك تمامًا من هذا المنتج ولن يمكن استرجاعه.\nهل أنت متأكد؟')">
+                                    <i class="fas fa-trash-alt"></i> إلغاء نهائي
                                 </a>
                             </div>
-                        <?php else: ?>
-                            <div style="color: #6b7280; font-size: 0.9rem; margin-top: 1rem;">
-                                لا يوجد كاشباك
-                            </div>
+							<?php elseif ($product['cashback_percentage'] && !$product['is_active']): ?>
+    <div class="cashback-badge" style="background:#6b7280; opacity:0.7;">
+        معطل <?= $product['cashback_percentage'] ?>%
+    </div>
+    <div style="margin-top: 1rem;">
+        <small style="color:#991b1b;">تم تعطيل الكاش باك مؤقتًا</small>
+        <!-- يمكن إضافة زر تفعيل هنا لاحقًا إذا أردت -->
+    </div>
+<?php else: ?>
+    <div style="color: #6b7280; font-size: 0.9rem; margin-top: 1rem;">
+        لا يوجد كاش باك
+    </div>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>

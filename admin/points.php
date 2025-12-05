@@ -20,10 +20,33 @@ if ($_POST && isset($_POST['add_points'])) {
     $customer = $stmt->fetch();
     
     if ($customer && $points > 0) {
-        if (addCustomerPoints($customer['id'], $points, $description, 'manual', null, 365)) {
+        try {
+            // بدء transaction
+            $pdo->beginTransaction();
+            
+            // تحديث أو إدخال رصيد النقاط
+            $stmt = $pdo->prepare("
+                INSERT INTO customer_points (customer_id, points, total_earned) 
+                VALUES (?, ?, ?)
+                ON DUPLICATE KEY UPDATE 
+                points = points + VALUES(points),
+                total_earned = total_earned + VALUES(total_earned)
+            ");
+            $stmt->execute([$customer['id'], $points, $points]);
+            
+            // تسجيل العملية في point_transactions بدون تحديد ID
+            $stmt = $pdo->prepare("
+                INSERT INTO point_transactions (customer_id, points, type, description, reference_type, expires_at)
+                VALUES (?, ?, 'earn', ?, 'manual', DATE_ADD(NOW(), INTERVAL 365 DAY))
+            ");
+            $stmt->execute([$customer['id'], $points, $description]);
+            
+            $pdo->commit();
             $message = "تم إضافة $points نقطة للعميل بنجاح";
-        } else {
-            $error = "حدث خطأ أثناء إضافة النقاط";
+            
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $error = "حدث خطأ أثناء إضافة النقاط: " . $e->getMessage();
         }
     } else {
         $error = "العميل غير موجود أو النقاط غير صالحة";
@@ -32,23 +55,37 @@ if ($_POST && isset($_POST['add_points'])) {
 
 // جلب إحصائيات النقاط
 $stmt = $pdo->query("
-    SELECT COUNT(*) as total_customers,
-           SUM(points) as total_points,
-           SUM(total_earned) as total_earned,
-           SUM(total_spent) as total_spent
-    FROM customer_points
+    SELECT 
+        COUNT(DISTINCT cp.customer_id) as total_customers,
+        COALESCE(SUM(cp.points), 0) as total_points,
+        COALESCE(SUM(cp.total_earned), 0) as total_earned,
+        COALESCE(SUM(cp.total_spent), 0) as total_spent
+    FROM customer_points cp
 ");
 $points_stats = $stmt->fetch();
 
 // جلب العملاء الأكثر نقاطاً
 $stmt = $pdo->query("
-    SELECT c.first_name, c.last_name, c.email, cp.points, cp.total_earned
-    FROM customer_points cp
-    JOIN customers c ON cp.customer_id = c.id
+    SELECT c.id, c.first_name, c.last_name, c.email, 
+           COALESCE(cp.points, 0) as points,
+           COALESCE(cp.total_earned, 0) as total_earned
+    FROM customers c
+    LEFT JOIN customer_points cp ON c.id = cp.customer_id
+    WHERE cp.points > 0 OR cp.total_earned > 0
     ORDER BY cp.points DESC
     LIMIT 10
 ");
 $top_customers = $stmt->fetchAll();
+
+// جلب آخر عمليات النقاط
+$recent_stmt = $pdo->query("
+    SELECT pt.*, c.first_name, c.last_name 
+    FROM point_transactions pt
+    JOIN customers c ON pt.customer_id = c.id
+    ORDER BY pt.id DESC 
+    LIMIT 5
+");
+$recent_transactions = $recent_stmt->fetchAll();
 ?>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -66,7 +103,6 @@ $top_customers = $stmt->fetchAll();
         }
         .admin-wrapper { display: flex; min-height: 100vh; }
         
-        /* Sidebar */
         .sidebar {
             width: 260px;
             background: #1e293b;
@@ -99,7 +135,6 @@ $top_customers = $stmt->fetchAll();
         }
         .menu-item i { width: 20px; }
         
-        /* Main Content */
         .main-content {
             flex: 1;
             margin-right: 260px;
@@ -133,7 +168,6 @@ $top_customers = $stmt->fetchAll();
             color: #fff;
         }
         
-        /* Stats Cards */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -167,7 +201,6 @@ $top_customers = $stmt->fetchAll();
         .stat-card.orange .stat-icon { background: #fed7aa; color: #ea580c; }
         .stat-card.purple .stat-icon { background: #e9d5ff; color: #9333ea; }
         
-        /* Tables */
         .card {
             background: #fff;
             border-radius: 12px;
@@ -224,23 +257,67 @@ $top_customers = $stmt->fetchAll();
         .badge-danger { background: #fee2e2; color: #991b1b; }
         .badge-info { background: #dbeafe; color: #1e40af; }
         
-        /* Charts Placeholder */
-        .chart-container {
-            height: 300px;
-            background: #f8fafc;
+        .points-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .form-card {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-card h3 {
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+            font-size: 1.25rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
             border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #94a3b8;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        @media (max-width: 1024px) {
+            .points-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="admin-wrapper"> 
-                <!-- Sidebar -->
-                <!-- تضمين القائمة الجانبية -->
         <?php include 'sidebar.php'; ?>
+        
         <main class="main-content">
             <div class="top-bar">
                 <div class="page-title">
@@ -263,7 +340,6 @@ $top_customers = $stmt->fetchAll();
 
             <div class="points-grid">
                 <div>
-                    <!-- إحصائيات سريعة -->
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
                         <div class="stat-card">
                             <h3>إجمالي النقاط</h3>
@@ -275,7 +351,6 @@ $top_customers = $stmt->fetchAll();
                         </div>
                     </div>
 
-                    <!-- العملاء الأكثر نقاطاً -->
                     <div class="card">
                         <h2>أفضل العملاء</h2>
                         <table>
@@ -300,10 +375,43 @@ $top_customers = $stmt->fetchAll();
                             </tbody>
                         </table>
                     </div>
+
+                    <div class="card">
+                        <h2>آخر عمليات النقاط</h2>
+                        <?php if (!empty($recent_transactions)): ?>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>العميل</th>
+                                        <th>النقاط</th>
+                                        <th>النوع</th>
+                                        <th>الوصف</th>
+                                        <th>التاريخ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recent_transactions as $transaction): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($transaction['first_name'] . ' ' . $transaction['last_name']) ?></td>
+                                        <td><?= number_format($transaction['points']) ?></td>
+                                        <td>
+                                            <span class="badge <?= $transaction['type'] == 'earn' ? 'badge-success' : 'badge-warning' ?>">
+                                                <?= $transaction['type'] == 'earn' ? 'اكتساب' : 'صرف' ?>
+                                            </span>
+                                        </td>
+                                        <td><?= htmlspecialchars($transaction['description']) ?></td>
+                                        <td><?= date('Y-m-d H:i', strtotime($transaction['created_at'])) ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p style="text-align: center; padding: 2rem; color: #6b7280;">لا توجد عمليات نقاط حديثة</p>
+                        <?php endif; ?>
+                    </div>
                 </div>
 
                 <div>
-                    <!-- نموذج إضافة النقاط -->
                     <div class="form-card">
                         <h3>إضافة نقاط يدوياً</h3>
                         <form method="post">

@@ -101,7 +101,8 @@
                 'icon' => 'fas fa-cubes',
                 'items' => [
                     'packages.php' => ['icon' => 'fas fa-cube', 'text' => 'الباقات', 'count' => $packages_count],
-                    'referrals.php' => ['icon' => 'fas fa-share-alt', 'text' => 'نظام الإحالات', 'count' => $referrals_count]
+                    'referrals.php' => ['icon' => 'fas fa-share-alt', 'text' => 'نظام الإحالات', 'count' => $referrals_count],
+                    'ads_manager.php' => ['icon' => 'fas fa-ad', 'text' => 'الاعلانات', 'count' => $referrals_count]
                 ]
             ],
             'الطاقم الإداري' => [
